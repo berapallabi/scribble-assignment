@@ -13,6 +13,11 @@ export function JoinRoomPage() {
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
 
+    if (!roomCode.trim()) {
+      setError("Room code is required");
+      return;
+    }
+
     try {
       setError(null);
       await roomStore.joinRoom(roomCode.toUpperCase(), playerName);

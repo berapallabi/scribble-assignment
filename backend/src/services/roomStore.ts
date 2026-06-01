@@ -29,14 +29,11 @@ function generateUniqueCode() {
   return code;
 }
 
-function displayName(name?: string) {
-  return name || "Player";
-}
-
-function createParticipant(name?: string): Participant {
+function createParticipant(name: string, isHost: boolean): Participant {
   return {
     id: randomUUID(),
-    name: displayName(name),
+    name,
+    isHost,
     joinedAt: now()
   };
 }
@@ -45,12 +42,18 @@ function cloneRoom(room: Room) {
   return structuredClone(room);
 }
 
+function httpError(statusCode: number, message: string) {
+  const error = new Error(message) as Error & { statusCode: number };
+  error.statusCode = statusCode;
+  return error;
+}
+
 export function listWords() {
   return [...STARTER_WORDS];
 }
 
-export function createRoom(playerName?: string) {
-  const participant = createParticipant(playerName);
+export function createRoom(playerName: string) {
+  const participant = createParticipant(playerName, true);
   const room: Room = {
     code: generateUniqueCode(),
     status: "lobby",
@@ -67,14 +70,14 @@ export function createRoom(playerName?: string) {
   };
 }
 
-export function joinRoom(code: string, playerName?: string) {
+export function joinRoom(code: string, playerName: string) {
   const room = rooms.get(code);
 
   if (!room) {
     return null;
   }
 
-  const participant = createParticipant(playerName);
+  const participant = createParticipant(playerName, false);
   room.participants.push(participant);
   room.updatedAt = now();
   rooms.set(room.code, room);
@@ -94,6 +97,34 @@ export function saveRoom(room: Room) {
   room.updatedAt = now();
   rooms.set(room.code, cloneRoom(room));
   return getRoom(room.code);
+}
+
+export function startGame(code: string, participantId: string) {
+  const room = rooms.get(code);
+
+  if (!room) {
+    throw httpError(404, "Room not found");
+  }
+
+  const caller = room.participants.find((p) => p.id === participantId);
+
+  if (!caller?.isHost) {
+    throw httpError(403, "Only the host can start the game");
+  }
+
+  if (room.participants.length < 2) {
+    throw httpError(422, "At least 2 players are required to start the game");
+  }
+
+  if (room.status === "in-game") {
+    throw httpError(409, "The game has already started");
+  }
+
+  room.status = "in-game";
+  room.updatedAt = now();
+  rooms.set(room.code, room);
+
+  return cloneRoom(room);
 }
 
 export function toRoomSnapshot(room: Room, viewerParticipantId?: string): RoomSnapshot {
