@@ -29,7 +29,7 @@ export interface Guess {
 
 export interface RoomSnapshot {
   code: string;
-  status: "lobby" | "in-game";
+  status: "lobby" | "in-game" | "game-over";
   participants: Participant[];
   availableWords: string[];
   roles: ParticipantRole[];
@@ -38,6 +38,8 @@ export interface RoomSnapshot {
   wordLength?: number;
   strokes: Stroke[];
   guesses: Guess[];
+  roundNumber: number;
+  secondsRemaining: number;
 }
 
 export interface RoomSessionResponse {

@@ -2,6 +2,8 @@ import { randomUUID } from "node:crypto";
 import type { Guess, Participant, Point, Room, RoomSnapshot, Stroke } from "../models/game.js";
 import { STARTER_ROLES, STARTER_WORDS } from "../seed/starterData.js";
 
+const ROUND_DURATION_MS = 60_000;
+
 const rooms = new Map<string, Room>();
 
 function now() {
@@ -53,6 +55,47 @@ function clamp(value: number) {
   return Math.min(1, Math.max(0, value));
 }
 
+function advanceRoundIfNeeded(room: Room): void {
+  if (room.status !== "in-game") {
+    return;
+  }
+
+  const elapsed = Date.now() - new Date(room.roundStartedAt).getTime();
+  const timerExpired = elapsed >= ROUND_DURATION_MS;
+
+  if (!timerExpired) {
+    const nonDrawers = room.participants.filter((p) => p.id !== room.drawerId);
+    const correctGuessers = new Set(
+      room.guesses.filter((g) => g.isCorrect).map((g) => g.participantId)
+    );
+    const allGuessed = nonDrawers.length > 0 && nonDrawers.every((p) => correctGuessers.has(p.id));
+
+    if (!allGuessed) {
+      return;
+    }
+  }
+
+  const nextRound = room.roundNumber + 1;
+
+  if (nextRound > room.participants.length) {
+    room.status = "game-over";
+    room.updatedAt = now();
+    rooms.set(room.code, room);
+    return;
+  }
+
+  const nextWord: string = STARTER_WORDS[(nextRound - 1) % STARTER_WORDS.length] ?? STARTER_WORDS[0] ?? "";
+
+  room.roundNumber = nextRound;
+  room.drawerId = room.participants[nextRound - 1]?.id;
+  room.currentWord = nextWord;
+  room.roundStartedAt = now();
+  room.strokes = [];
+  room.guesses = [];
+  room.updatedAt = now();
+  rooms.set(room.code, room);
+}
+
 export function listWords() {
   return [...STARTER_WORDS];
 }
@@ -66,7 +109,9 @@ export function createRoom(playerName: string) {
     createdAt: now(),
     updatedAt: now(),
     strokes: [],
-    guesses: []
+    guesses: [],
+    roundNumber: 0,
+    roundStartedAt: ""
   };
 
   rooms.set(room.code, room);
@@ -97,7 +142,13 @@ export function joinRoom(code: string, playerName: string) {
 
 export function getRoom(code: string) {
   const room = rooms.get(code);
-  return room ? cloneRoom(room) : null;
+
+  if (!room) {
+    return null;
+  }
+
+  advanceRoundIfNeeded(room);
+  return cloneRoom(room);
 }
 
 export function saveRoom(room: Room) {
@@ -141,6 +192,8 @@ export function startGame(code: string, participantId: string) {
   room.currentWord = firstWord;
   room.strokes = [];
   room.guesses = [];
+  room.roundNumber = 1;
+  room.roundStartedAt = now();
   room.status = "in-game";
   room.updatedAt = now();
   rooms.set(room.code, room);
@@ -247,10 +300,20 @@ export function submitGuess(code: string, participantId: string, rawText: string
   room.updatedAt = now();
   rooms.set(room.code, room);
 
+  advanceRoundIfNeeded(room);
+
   return cloneRoom(room);
 }
 
 export function toRoomSnapshot(room: Room, viewerParticipantId?: string): RoomSnapshot {
+  const elapsed = room.roundStartedAt
+    ? Date.now() - new Date(room.roundStartedAt).getTime()
+    : 0;
+  const secondsRemaining =
+    room.status === "in-game"
+      ? Math.max(0, 60 - Math.floor(elapsed / 1000))
+      : 0;
+
   const snapshot: RoomSnapshot = {
     code: room.code,
     status: room.status,
@@ -259,7 +322,9 @@ export function toRoomSnapshot(room: Room, viewerParticipantId?: string): RoomSn
     roles: [...STARTER_ROLES],
     strokes: room.strokes.map((s) => ({ ...s, points: [...s.points] })),
     guesses: [...room.guesses],
-    ...(room.status === "in-game" && { drawerId: room.drawerId })
+    roundNumber: room.roundNumber,
+    secondsRemaining,
+    ...(room.status !== "lobby" && { drawerId: room.drawerId })
   };
 
   if (room.status === "in-game" && room.currentWord) {

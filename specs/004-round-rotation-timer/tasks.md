@@ -17,7 +17,7 @@
 
 **Purpose**: Baseline check — no new project structure required
 
-- [ ] T001 Verify `STARTER_WORDS` has ≥ 1 entry in backend/src/seed/starterData.ts (read-only)
+- [x] T001 Verify `STARTER_WORDS` has ≥ 1 entry in backend/src/seed/starterData.ts (read-only)
 
 ---
 
@@ -25,10 +25,10 @@
 
 **⚠️ CRITICAL**: Complete before any user story work
 
-- [ ] T002 [P] Extend `RoomStatus` to `"lobby" | "in-game" | "game-over"`; add `roundNumber: number` and `roundStartedAt: string` to `Room`; add `roundNumber: number` and `secondsRemaining: number` to `RoomSnapshot` in backend/src/models/game.ts
-- [ ] T003 [P] Extend `RoomSnapshot.status` type to include `"game-over"`; add `roundNumber: number` and `secondsRemaining: number` to `RoomSnapshot` in frontend/src/services/api.ts
-- [ ] T004 Update `createRoom()` in backend/src/services/roomStore.ts to initialise `roundNumber: 0` and `roundStartedAt: ""` on the new room object (sentinel for lobby state)
-- [ ] T005 Update `startGame()` in backend/src/services/roomStore.ts to set `room.roundNumber = 1` and `room.roundStartedAt = now()` after existing guard checks
+- [x] T002 [P] Extend `RoomStatus` to `"lobby" | "in-game" | "game-over"`; add `roundNumber: number` and `roundStartedAt: string` to `Room`; add `roundNumber: number` and `secondsRemaining: number` to `RoomSnapshot` in backend/src/models/game.ts
+- [x] T003 [P] Extend `RoomSnapshot.status` type to include `"game-over"`; add `roundNumber: number` and `secondsRemaining: number` to `RoomSnapshot` in frontend/src/services/api.ts
+- [x] T004 Update `createRoom()` in backend/src/services/roomStore.ts to initialise `roundNumber: 0` and `roundStartedAt: ""` on the new room object (sentinel for lobby state)
+- [x] T005 Update `startGame()` in backend/src/services/roomStore.ts to set `room.roundNumber = 1` and `room.roundStartedAt = now()` after existing guard checks
 
 **Checkpoint**: Types updated; room creation and game-start include round fields — user stories can begin
 
@@ -42,10 +42,10 @@
 
 ### Implementation for User Story 1
 
-- [ ] T006 [US1] Add `advanceRoundIfNeeded(room: Room): void` to backend/src/services/roomStore.ts: (1) return if `room.status !== "in-game"`; (2) check timer: `Date.now() - new Date(room.roundStartedAt).getTime() >= 60_000`; (3) check all-guessed: every non-drawer participant has ≥1 correct entry in `room.guesses`; (4) if neither condition met, return; (5) if `room.roundNumber >= room.participants.length` set `room.status = "game-over"` else increment `roundNumber`, set `drawerId = participants[roundNumber-1].id`, `currentWord = STARTER_WORDS[(roundNumber-1) % STARTER_WORDS.length]`, `roundStartedAt = now()`, `strokes = []`, `guesses = []`; (6) call `rooms.set(room.code, room)` to persist
-- [ ] T007 [US1] Update `getRoom(code)` in backend/src/services/roomStore.ts to call `advanceRoundIfNeeded` on the live room before cloning: get room from map, call `advanceRoundIfNeeded(room)`, return `cloneRoom(room)`
-- [ ] T008 [US1] Update `submitGuess()` in backend/src/services/roomStore.ts to call `advanceRoundIfNeeded(room)` after appending the guess and before returning `cloneRoom(room)`
-- [ ] T009 [US1] Update `toRoomSnapshot()` in backend/src/services/roomStore.ts to include `roundNumber: room.roundNumber` and `secondsRemaining` (computed as `room.status === "in-game" ? Math.max(0, 60 - Math.floor((Date.now() - new Date(room.roundStartedAt).getTime()) / 1000)) : 0`) in the returned snapshot
+- [x] T006 [US1] Add `advanceRoundIfNeeded(room: Room): void` to backend/src/services/roomStore.ts: (1) return if `room.status !== "in-game"`; (2) check timer: `Date.now() - new Date(room.roundStartedAt).getTime() >= 60_000`; (3) check all-guessed: every non-drawer participant has ≥1 correct entry in `room.guesses`; (4) if neither condition met, return; (5) if `room.roundNumber >= room.participants.length` set `room.status = "game-over"` else increment `roundNumber`, set `drawerId = participants[roundNumber-1].id`, `currentWord = STARTER_WORDS[(roundNumber-1) % STARTER_WORDS.length]`, `roundStartedAt = now()`, `strokes = []`, `guesses = []`; (6) call `rooms.set(room.code, room)` to persist
+- [x] T007 [US1] Update `getRoom(code)` in backend/src/services/roomStore.ts to call `advanceRoundIfNeeded` on the live room before cloning: get room from map, call `advanceRoundIfNeeded(room)`, return `cloneRoom(room)`
+- [x] T008 [US1] Update `submitGuess()` in backend/src/services/roomStore.ts to call `advanceRoundIfNeeded(room)` after appending the guess and before returning `cloneRoom(room)`
+- [x] T009 [US1] Update `toRoomSnapshot()` in backend/src/services/roomStore.ts to include `roundNumber: room.roundNumber` and `secondsRemaining` (computed as `room.status === "in-game" ? Math.max(0, 60 - Math.floor((Date.now() - new Date(room.roundStartedAt).getTime()) / 1000)) : 0`) in the returned snapshot
 
 **Checkpoint**: Round transitions fire on both all-guessed and timeout triggers. Scores, canvas state, and drawer rotation are correct. Verify with two browser tabs.
 
@@ -59,7 +59,7 @@
 
 ### Implementation for User Story 2
 
-- [ ] T010 [US2] Update frontend/src/pages/GamePage.tsx: replace the hardcoded `"Round 1"` section kicker with `Round ${room.roundNumber}`; add a countdown display (e.g. `<span>{room.secondsRemaining}s</span>`) in the game header next to the round kicker
+- [x] T010 [US2] Update frontend/src/pages/GamePage.tsx: replace the hardcoded `"Round 1"` section kicker with `Round ${room.roundNumber}`; add a countdown display (e.g. `<span>{room.secondsRemaining}s</span>`) in the game header next to the round kicker
 
 **Checkpoint**: Header shows "Round 2", "Round 3" etc. as rounds advance. Countdown ticks down visibly via the existing 2 s polling loop and resets to 60 at each new round.
 
@@ -73,7 +73,7 @@
 
 ### Implementation for User Story 3
 
-- [ ] T011 [US3] Update frontend/src/pages/GamePage.tsx: before the main game layout, add a game-over guard — if `room.status === "game-over"`, render a full-panel overlay showing "Game Over", a sorted list of participant names and scores (descending), and an Exit button (`navigate("/lobby")`); return early so the canvas/guess layout is not rendered
+- [x] T011 [US3] Update frontend/src/pages/GamePage.tsx: before the main game layout, add a game-over guard — if `room.status === "game-over"`, render a full-panel overlay showing "Game Over", a sorted list of participant names and scores (descending), and an Exit button (`navigate("/lobby")`); return early so the canvas/guess layout is not rendered
 
 **Checkpoint**: After all N rounds, all tabs show the game-over screen with final scores. Exit navigates back to lobby.
 
@@ -81,8 +81,8 @@
 
 ## Phase 6: Polish & Cross-Cutting Concerns
 
-- [ ] T012 [P] Verify TypeScript build passes for backend with `npm run build` in backend/
-- [ ] T013 [P] Verify TypeScript build passes for frontend with `npm run build` in frontend/
+- [x] T012 [P] Verify TypeScript build passes for backend with `npm run build` in backend/
+- [x] T013 [P] Verify TypeScript build passes for frontend with `npm run build` in frontend/
 
 ---
 

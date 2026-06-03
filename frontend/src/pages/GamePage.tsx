@@ -44,6 +44,44 @@ export function GamePage() {
     return null;
   }
 
+  // Game-over overlay — render before canvas/guess layout
+  if (room.status === "game-over") {
+    const sorted = [...room.participants].sort((a, b) => b.score - a.score);
+
+    return (
+      <section className="panel game-page">
+        <div className="game-page__header">
+          <div className="game-page__header-left">
+            <span className="section-kicker">Game Over</span>
+            <h1 className="game-page__title">Final Scores</h1>
+          </div>
+          <RoomCodeBadge code={room.code} />
+        </div>
+
+        <div style={{ maxWidth: "480px", margin: "2rem auto" }}>
+          <Card title="Results">
+            <ul className="player-list">
+              {sorted.map((p, i) => (
+                <li key={p.id} className="player-list__item">
+                  <span className="player-list__name">
+                    {i + 1}. {p.name}
+                  </span>
+                  <strong>{p.score} pts</strong>
+                </li>
+              ))}
+            </ul>
+          </Card>
+        </div>
+
+        <div className="button-row">
+          <button className="button button--secondary" onClick={() => navigate("/lobby")}>
+            Back to Lobby
+          </button>
+        </div>
+      </section>
+    );
+  }
+
   const isDrawer = room.drawerId === participantId;
   const drawerName = room.participants.find((p) => p.id === room.drawerId)?.name;
   const wordDisplay = isDrawer
@@ -100,7 +138,9 @@ export function GamePage() {
     <section className="panel game-page">
       <div className="game-page__header">
         <div className="game-page__header-left">
-          <span className="section-kicker">Round 1</span>
+          <span className="section-kicker">
+            Round {room.roundNumber} &nbsp;·&nbsp; {room.secondsRemaining}s
+          </span>
           <h1 className="game-page__title">Guess the Word!</h1>
         </div>
         <RoomCodeBadge code={room.code} />
