@@ -209,6 +209,10 @@ export function submitGuess(code: string, participantId: string, rawText: string
     throw httpError(404, "Room not found");
   }
 
+  if (room.status === "round-over") {
+    throw httpError(409, "The round has ended");
+  }
+
   if (room.status !== "in-game") {
     throw httpError(409, "Game has not started");
   }
@@ -221,6 +225,14 @@ export function submitGuess(code: string, participantId: string, rawText: string
 
   if (participantId === room.drawerId) {
     throw httpError(403, "The drawer cannot submit guesses");
+  }
+
+  const alreadyCorrect = room.guesses.some(
+    (g) => g.participantId === participantId && g.isCorrect
+  );
+
+  if (alreadyCorrect) {
+    throw httpError(409, "You have already guessed the word correctly");
   }
 
   const text = rawText.trim();
@@ -244,9 +256,51 @@ export function submitGuess(code: string, participantId: string, rawText: string
   };
 
   room.guesses.push(guess);
+
+  const nonDrawers = room.participants.filter((p) => p.id !== room.drawerId);
+  const correctGuessers = new Set(
+    room.guesses.filter((g) => g.isCorrect).map((g) => g.participantId)
+  );
+
+  if (nonDrawers.length > 0 && nonDrawers.every((p) => correctGuessers.has(p.id))) {
+    room.status = "round-over";
+  }
+
   room.updatedAt = now();
   rooms.set(room.code, room);
 
+  return cloneRoom(room);
+}
+
+export function restartGame(code: string, participantId: string) {
+  const room = rooms.get(code);
+
+  if (!room) {
+    throw httpError(404, "Room not found");
+  }
+
+  const caller = room.participants.find((p) => p.id === participantId);
+
+  if (!caller?.isHost) {
+    throw httpError(403, "Only the host can restart the game");
+  }
+
+  if (room.status !== "round-over") {
+    throw httpError(409, "The round is not over yet");
+  }
+
+  room.status = "lobby";
+  room.drawerId = undefined;
+  room.currentWord = undefined;
+  room.strokes = [];
+  room.guesses = [];
+
+  for (const p of room.participants) {
+    p.score = 0;
+  }
+
+  room.updatedAt = now();
+  rooms.set(room.code, room);
   return cloneRoom(room);
 }
 
@@ -259,14 +313,18 @@ export function toRoomSnapshot(room: Room, viewerParticipantId?: string): RoomSn
     roles: [...STARTER_ROLES],
     strokes: room.strokes.map((s) => ({ ...s, points: [...s.points] })),
     guesses: [...room.guesses],
-    ...(room.status === "in-game" && { drawerId: room.drawerId })
+    ...(room.status !== "lobby" && { drawerId: room.drawerId })
   };
 
-  if (room.status === "in-game" && room.currentWord) {
-    if (viewerParticipantId === room.drawerId) {
+  if (room.currentWord) {
+    if (room.status === "round-over") {
       snapshot.currentWord = room.currentWord;
-    } else {
-      snapshot.wordLength = room.currentWord.length;
+    } else if (room.status === "in-game") {
+      if (viewerParticipantId === room.drawerId) {
+        snapshot.currentWord = room.currentWord;
+      } else {
+        snapshot.wordLength = room.currentWord.length;
+      }
     }
   }
 

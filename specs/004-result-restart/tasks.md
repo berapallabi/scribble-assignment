@@ -17,7 +17,7 @@
 
 **Purpose**: Baseline check — no new project structure required
 
-- [ ] T001 Verify `room.guesses` is an array on every `Room` and that `submitGuess` does NOT already block duplicate correct guesses in backend/src/services/roomStore.ts (read-only; confirms the guard is missing and needs to be added)
+- [x] T001 Verify `room.guesses` is an array on every `Room` and that `submitGuess` does NOT already block duplicate correct guesses in backend/src/services/roomStore.ts (read-only; confirms the guard is missing and needs to be added)
 
 ---
 
@@ -27,8 +27,8 @@
 
 **⚠️ CRITICAL**: No user story work can begin until this phase is complete
 
-- [ ] T002 [P] Change `RoomStatus` from `"lobby" | "in-game"` to `"lobby" | "in-game" | "round-over"` in backend/src/models/game.ts
-- [ ] T003 [P] Change `status` type in `RoomSnapshot` from `"lobby" | "in-game"` to `"lobby" | "in-game" | "round-over"` in frontend/src/services/api.ts
+- [x] T002 [P] Change `RoomStatus` from `"lobby" | "in-game"` to `"lobby" | "in-game" | "round-over"` in backend/src/models/game.ts
+- [x] T003 [P] Change `status` type in `RoomSnapshot` from `"lobby" | "in-game"` to `"lobby" | "in-game" | "round-over"` in frontend/src/services/api.ts
 
 **Checkpoint**: Both layers typed — user story implementation can begin
 
@@ -42,9 +42,9 @@
 
 ### Implementation for User Story 1
 
-- [ ] T004 [US1] Update `submitGuess()` in backend/src/services/roomStore.ts with three additions (in this order, after existing guards): (1) already-correct guard — `if (room.guesses.some(g => g.participantId === participantId && g.isCorrect)) throw httpError(409, "You have already guessed the word correctly")`; (2) round-over guard — add `if (room.status === "round-over") throw httpError(409, "The round has ended")` before the existing `"in-game"` check; (3) round-over detection — after `room.guesses.push(guess)`, compute `nonDrawers` and `correctGuessers`, if all non-drawers have a correct guess set `room.status = "round-over"` then persist with `rooms.set`
-- [ ] T005 [US1] Update `toRoomSnapshot()` in backend/src/services/roomStore.ts to reveal the word to all viewers in round-over: change the word-inclusion condition from `if (room.status === "in-game" && room.currentWord)` to handle three cases — `"round-over"` sets `snapshot.currentWord` for all; `"in-game"` keeps the existing drawer/guesser split; lobby omits the word (after T004)
-- [ ] T006 [US1] Add a `round-over` result view to frontend/src/pages/GamePage.tsx: before the main in-game layout, add `if (room.status === "round-over")` branch that shows the revealed word prominently, a sorted final-scores list, and `<ResultPanel guesses={room.guesses ?? []} />`; include an "Exit" button navigating to `/lobby` for all players; the view must render from `room.currentWord`, `room.participants`, and `room.guesses` already in the snapshot (depends on T003 for status type and T005 for word in snapshot)
+- [x] T004 [US1] Update `submitGuess()` in backend/src/services/roomStore.ts with three additions (in this order, after existing guards): (1) already-correct guard — `if (room.guesses.some(g => g.participantId === participantId && g.isCorrect)) throw httpError(409, "You have already guessed the word correctly")`; (2) round-over guard — add `if (room.status === "round-over") throw httpError(409, "The round has ended")` before the existing `"in-game"` check; (3) round-over detection — after `room.guesses.push(guess)`, compute `nonDrawers` and `correctGuessers`, if all non-drawers have a correct guess set `room.status = "round-over"` then persist with `rooms.set`
+- [x] T005 [US1] Update `toRoomSnapshot()` in backend/src/services/roomStore.ts to reveal the word to all viewers in round-over: change the word-inclusion condition from `if (room.status === "in-game" && room.currentWord)` to handle three cases — `"round-over"` sets `snapshot.currentWord` for all; `"in-game"` keeps the existing drawer/guesser split; lobby omits the word (after T004)
+- [x] T006 [US1] Add a `round-over` result view to frontend/src/pages/GamePage.tsx: before the main in-game layout, add `if (room.status === "round-over")` branch that shows the revealed word prominently, a sorted final-scores list, and `<ResultPanel guesses={room.guesses ?? []} />`; include an "Exit" button navigating to `/lobby` for all players; the view must render from `room.currentWord`, `room.participants`, and `room.guesses` already in the snapshot (depends on T003 for status type and T005 for word in snapshot)
 
 **Checkpoint**: All tabs automatically show the result view (word + scores + history) when both guessers answer correctly. No manual refresh needed — detected via existing 2 s polling.
 
@@ -58,11 +58,11 @@
 
 ### Implementation for User Story 2
 
-- [ ] T007 [P] [US2] Add `restartGame(code, participantId)` function to backend/src/services/roomStore.ts: guard room exists (404), caller is host (403 `"Only the host can restart the game"`), room is `"round-over"` (409 `"The round is not over yet"`); then set `room.status = "lobby"`, `room.drawerId = undefined`, `room.currentWord = undefined`, `room.strokes = []`, `room.guesses = []`, reset `participant.score = 0` for every participant; persist with `rooms.set`; return `cloneRoom(room)` (parallel with T008 — different logical section of the file, no conflict)
-- [ ] T008 [P] [US2] Add `export const restartGameSchema = z.object({ participantId: z.string().min(1, "Participant ID is required") })` to backend/src/api/schemas.ts (parallel with T007, different file)
-- [ ] T009 [US2] Add `POST /rooms/:code/restart` route to backend/src/api/rooms.ts: import `restartGame` from roomStore and `restartGameSchema` from schemas; parse `restartGameSchema.parse(request.body)`; call `restartGame(code.toUpperCase(), participantId)`; return `{ room: toRoomSnapshot(room) }` (after T007 + T008)
-- [ ] T010 [P] [US2] Add `restartGame(code: string, participantId: string)` method to the `api` object in frontend/src/services/api.ts: `POST /rooms/${encodeURIComponent(code)}/restart` with body `{ participantId }`, returning `{ room: RoomSnapshot }` (parallel with T007–T009, different layer; depends on T003 for types)
-- [ ] T011 [US2] Update frontend/src/pages/GamePage.tsx: (1) add `useEffect` that navigates to `/lobby` with `{ replace: true }` when `room?.status === "lobby"` — depends on `[navigate, room?.status]`; (2) in the `"round-over"` result view from T006, derive `isHost = room.participants.find(p => p.id === participantId)?.isHost ?? false`; (3) add "Play Again" button visible only when `isHost` that calls `api.restartGame(room.code, participantId)` and then `store.setRoomSnapshot(response.room)` (after T009 + T010)
+- [x] T007 [P] [US2] Add `restartGame(code, participantId)` function to backend/src/services/roomStore.ts: guard room exists (404), caller is host (403 `"Only the host can restart the game"`), room is `"round-over"` (409 `"The round is not over yet"`); then set `room.status = "lobby"`, `room.drawerId = undefined`, `room.currentWord = undefined`, `room.strokes = []`, `room.guesses = []`, reset `participant.score = 0` for every participant; persist with `rooms.set`; return `cloneRoom(room)` (parallel with T008 — different logical section of the file, no conflict)
+- [x] T008 [P] [US2] Add `export const restartGameSchema = z.object({ participantId: z.string().min(1, "Participant ID is required") })` to backend/src/api/schemas.ts (parallel with T007, different file)
+- [x] T009 [US2] Add `POST /rooms/:code/restart` route to backend/src/api/rooms.ts: import `restartGame` from roomStore and `restartGameSchema` from schemas; parse `restartGameSchema.parse(request.body)`; call `restartGame(code.toUpperCase(), participantId)`; return `{ room: toRoomSnapshot(room) }` (after T007 + T008)
+- [x] T010 [P] [US2] Add `restartGame(code: string, participantId: string)` method to the `api` object in frontend/src/services/api.ts: `POST /rooms/${encodeURIComponent(code)}/restart` with body `{ participantId }`, returning `{ room: RoomSnapshot }` (parallel with T007–T009, different layer; depends on T003 for types)
+- [x] T011 [US2] Update frontend/src/pages/GamePage.tsx: (1) add `useEffect` that navigates to `/lobby` with `{ replace: true }` when `room?.status === "lobby"` — depends on `[navigate, room?.status]`; (2) in the `"round-over"` result view from T006, derive `isHost = room.participants.find(p => p.id === participantId)?.isHost ?? false`; (3) add "Play Again" button visible only when `isHost` that calls `api.restartGame(room.code, participantId)` and then `store.setRoomSnapshot(response.room)` (after T009 + T010)
 
 **Checkpoint**: Host clicks "Play Again" → all tabs navigate to lobby within next poll with names intact and scores at 0. Non-host tab: no "Play Again" button visible.
 
@@ -72,8 +72,8 @@
 
 **Goal**: End-to-end session (lobby → round → result → restart → lobby → second round start) works correctly. Both builds pass.
 
-- [ ] T012 [P] Verify TypeScript build passes for backend with `npm run build` in backend/
-- [ ] T013 [P] Verify TypeScript build passes for frontend with `npm run build` in frontend/
+- [x] T012 [P] Verify TypeScript build passes for backend with `npm run build` in backend/
+- [x] T013 [P] Verify TypeScript build passes for frontend with `npm run build` in frontend/
 
 ---
 

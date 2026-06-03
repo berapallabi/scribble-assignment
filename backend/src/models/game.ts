@@ -1,5 +1,5 @@
 export type ParticipantRole = "drawer" | "guesser";
-export type RoomStatus = "lobby" | "in-game";
+export type RoomStatus = "lobby" | "in-game" | "round-over";
 
 export interface Participant {
   id: string;

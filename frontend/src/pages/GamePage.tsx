@@ -40,8 +40,74 @@ export function GamePage() {
     return () => clearInterval(id);
   }, [store, room?.code]);
 
+  useEffect(() => {
+    if (room?.status === "lobby") {
+      navigate("/lobby", { replace: true });
+    }
+  }, [navigate, room?.status]);
+
   if (!room || !participantId) {
     return null;
+  }
+
+  if (room.status === "round-over") {
+    const sorted = [...room.participants].sort((a, b) => b.score - a.score);
+    const isHost = room.participants.find((p) => p.id === participantId)?.isHost ?? false;
+
+    async function handleRestart() {
+      if (!room || !participantId) return;
+      try {
+        const response = await api.restartGame(room.code, participantId);
+        store.setRoomSnapshot(response.room);
+      } catch {
+        // polling will sync state
+      }
+    }
+
+    return (
+      <section className="panel game-page">
+        <div className="game-page__header">
+          <div className="game-page__header-left">
+            <span className="section-kicker">Round Over</span>
+            <h1 className="game-page__title">
+              {room.currentWord
+                ? <>The word was <strong>{room.currentWord}</strong></>
+                : "Round Over"}
+            </h1>
+          </div>
+          <RoomCodeBadge code={room.code} />
+        </div>
+
+        <div style={{ display: "flex", gap: "1rem", flex: 1, overflow: "hidden", minHeight: 0 }}>
+          <aside style={{ width: "220px", flexShrink: 0 }}>
+            <Card title="Final Scores">
+              <ul className="player-list">
+                {sorted.map((p, i) => (
+                  <li key={p.id} className="player-list__item">
+                    <span className="player-list__name">{i + 1}. {p.name}</span>
+                    <strong>{p.score}</strong>
+                  </li>
+                ))}
+              </ul>
+            </Card>
+          </aside>
+          <div style={{ flex: 1, overflow: "auto" }}>
+            <ResultPanel guesses={room.guesses ?? []} />
+          </div>
+        </div>
+
+        <div className="button-row">
+          {isHost && (
+            <button className="button button--primary" onClick={handleRestart}>
+              Play Again
+            </button>
+          )}
+          <button className="button button--secondary" onClick={() => navigate("/lobby")}>
+            Exit
+          </button>
+        </div>
+      </section>
+    );
   }
 
   const isDrawer = room.drawerId === participantId;
