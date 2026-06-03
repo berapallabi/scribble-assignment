@@ -17,7 +17,7 @@
 
 **Purpose**: Baseline check — no new project structure or dependencies required
 
-- [ ] T001 Verify `room.guesses` is NOT cleared in `advanceRoundIfNeeded` when transitioning to `"game-over"` in backend/src/services/roomStore.ts (read-only; confirms last round's guess history is available for the result screen)
+- [x] T001 Verify `room.guesses` is NOT cleared in `advanceRoundIfNeeded` when transitioning to `"game-over"` in backend/src/services/roomStore.ts (read-only; confirms last round's guess history is available for the result screen)
 
 ---
 
@@ -35,8 +35,8 @@
 
 ### Implementation for User Story 1
 
-- [ ] T002 [US1] Update `toRoomSnapshot()` in backend/src/services/roomStore.ts: extend the word-inclusion block so that when `room.status === "game-over"` and `room.currentWord` exists, `snapshot.currentWord = room.currentWord` is set for all viewers (remove the viewer filter for game-over; keep existing in-game drawer/guesser split unchanged)
-- [ ] T003 [US1] Extend the game-over overlay in frontend/src/pages/GamePage.tsx: inside the `if (room.status === "game-over")` block, add a word-reveal paragraph `<p>The word was: <strong>{room.currentWord}</strong></p>` above the scores list, and add `<ResultPanel guesses={room.guesses ?? []} />` below the scores card to show the full guess history (depends on T002 for currentWord in snapshot)
+- [x] T002 [US1] Update `toRoomSnapshot()` in backend/src/services/roomStore.ts: extend the word-inclusion block so that when `room.status === "game-over"` and `room.currentWord` exists, `snapshot.currentWord = room.currentWord` is set for all viewers (remove the viewer filter for game-over; keep existing in-game drawer/guesser split unchanged)
+- [x] T003 [US1] Extend the game-over overlay in frontend/src/pages/GamePage.tsx: inside the `if (room.status === "game-over")` block, add a word-reveal paragraph `<p>The word was: <strong>{room.currentWord}</strong></p>` above the scores list, and add `<ResultPanel guesses={room.guesses ?? []} />` below the scores card to show the full guess history (depends on T002 for currentWord in snapshot)
 
 **Checkpoint**: All browser tabs show the revealed word and full guess history on the game-over screen without any manual refresh.
 
@@ -50,11 +50,11 @@
 
 ### Implementation for User Story 2
 
-- [ ] T004 [P] [US2] Add `restartGame(code, participantId)` function to backend/src/services/roomStore.ts: guard room exists (404), caller is host (403 "Only the host can restart the game"), room is game-over (409 "Game is not over yet"); then set `room.status = "lobby"`, `room.drawerId = undefined`, `room.currentWord = undefined`, `room.roundNumber = 0`, `room.roundStartedAt = ""`, `room.strokes = []`, `room.guesses = []`, reset all `participant.score = 0`; call `rooms.set(room.code, room)`; return `cloneRoom(room)`
-- [ ] T005 [P] [US2] Add `export const restartGameSchema = z.object({ participantId: z.string().min(1, "Participant ID is required") })` to backend/src/api/schemas.ts (parallel with T004, different file)
-- [ ] T006 [US2] Add `POST /rooms/:code/restart` route to backend/src/api/rooms.ts: import `restartGame` and `restartGameSchema`; parse `restartGameSchema.parse(request.body)`; call `restartGame(code.toUpperCase(), participantId)`; return `{ room: toRoomSnapshot(room) }` (after T004 + T005)
-- [ ] T007 [P] [US2] Add `restartGame(code: string, participantId: string)` method to the `api` object in frontend/src/services/api.ts: `POST /rooms/${encodeURIComponent(code)}/restart` with body `{ participantId }`, returning `{ room: RoomSnapshot }` (parallel with T004–T006; different layer)
-- [ ] T008 [US2] Update frontend/src/pages/GamePage.tsx: (1) add a `useEffect` that navigates to `/lobby` with `{ replace: true }` when `room?.status === "lobby"`; (2) in the game-over overlay, derive `isHost = room.participants.find(p => p.id === participantId)?.isHost ?? false`; (3) add a "Play Again" button shown only when `isHost` that calls `api.restartGame(room.code, participantId)` then `store.setRoomSnapshot(response.room)` (after T006 + T007)
+- [x] T004 [P] [US2] Add `restartGame(code, participantId)` function to backend/src/services/roomStore.ts: guard room exists (404), caller is host (403 "Only the host can restart the game"), room is game-over (409 "Game is not over yet"); then set `room.status = "lobby"`, `room.drawerId = undefined`, `room.currentWord = undefined`, `room.roundNumber = 0`, `room.roundStartedAt = ""`, `room.strokes = []`, `room.guesses = []`, reset all `participant.score = 0`; call `rooms.set(room.code, room)`; return `cloneRoom(room)`
+- [x] T005 [P] [US2] Add `export const restartGameSchema = z.object({ participantId: z.string().min(1, "Participant ID is required") })` to backend/src/api/schemas.ts (parallel with T004, different file)
+- [x] T006 [US2] Add `POST /rooms/:code/restart` route to backend/src/api/rooms.ts: import `restartGame` and `restartGameSchema`; parse `restartGameSchema.parse(request.body)`; call `restartGame(code.toUpperCase(), participantId)`; return `{ room: toRoomSnapshot(room) }` (after T004 + T005)
+- [x] T007 [P] [US2] Add `restartGame(code: string, participantId: string)` method to the `api` object in frontend/src/services/api.ts: `POST /rooms/${encodeURIComponent(code)}/restart` with body `{ participantId }`, returning `{ room: RoomSnapshot }` (parallel with T004–T006; different layer)
+- [x] T008 [US2] Update frontend/src/pages/GamePage.tsx: (1) add a `useEffect` that navigates to `/lobby` with `{ replace: true }` when `room?.status === "lobby"`; (2) in the game-over overlay, derive `isHost = room.participants.find(p => p.id === participantId)?.isHost ?? false`; (3) add a "Play Again" button shown only when `isHost` that calls `api.restartGame(room.code, participantId)` then `store.setRoomSnapshot(response.room)` (after T006 + T007)
 
 **Checkpoint**: Host clicks "Play Again" → all tabs navigate to lobby within the next poll with names preserved and scores at 0. Non-host tab: no "Play Again" button.
 
@@ -64,8 +64,8 @@
 
 **Goal**: End-to-end flow (lobby → rounds → game-over → word reveal → restart → lobby) verified with no regressions. Both builds pass.
 
-- [ ] T009 [P] Verify TypeScript build passes for backend with `npm run build` in backend/
-- [ ] T010 [P] Verify TypeScript build passes for frontend with `npm run build` in frontend/
+- [x] T009 [P] Verify TypeScript build passes for backend with `npm run build` in backend/
+- [x] T010 [P] Verify TypeScript build passes for frontend with `npm run build` in frontend/
 
 ---
 

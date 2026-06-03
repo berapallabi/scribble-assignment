@@ -305,6 +305,40 @@ export function submitGuess(code: string, participantId: string, rawText: string
   return cloneRoom(room);
 }
 
+export function restartGame(code: string, participantId: string) {
+  const room = rooms.get(code);
+
+  if (!room) {
+    throw httpError(404, "Room not found");
+  }
+
+  const caller = room.participants.find((p) => p.id === participantId);
+
+  if (!caller?.isHost) {
+    throw httpError(403, "Only the host can restart the game");
+  }
+
+  if (room.status !== "game-over") {
+    throw httpError(409, "Game is not over yet");
+  }
+
+  room.status = "lobby";
+  room.drawerId = undefined;
+  room.currentWord = undefined;
+  room.roundNumber = 0;
+  room.roundStartedAt = "";
+  room.strokes = [];
+  room.guesses = [];
+
+  for (const p of room.participants) {
+    p.score = 0;
+  }
+
+  room.updatedAt = now();
+  rooms.set(room.code, room);
+  return cloneRoom(room);
+}
+
 export function toRoomSnapshot(room: Room, viewerParticipantId?: string): RoomSnapshot {
   const elapsed = room.roundStartedAt
     ? Date.now() - new Date(room.roundStartedAt).getTime()
@@ -327,11 +361,15 @@ export function toRoomSnapshot(room: Room, viewerParticipantId?: string): RoomSn
     ...(room.status !== "lobby" && { drawerId: room.drawerId })
   };
 
-  if (room.status === "in-game" && room.currentWord) {
-    if (viewerParticipantId === room.drawerId) {
+  if (room.currentWord) {
+    if (room.status === "game-over") {
       snapshot.currentWord = room.currentWord;
-    } else {
-      snapshot.wordLength = room.currentWord.length;
+    } else if (room.status === "in-game") {
+      if (viewerParticipantId === room.drawerId) {
+        snapshot.currentWord = room.currentWord;
+      } else {
+        snapshot.wordLength = room.currentWord.length;
+      }
     }
   }
 

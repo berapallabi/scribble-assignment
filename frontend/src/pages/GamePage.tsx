@@ -40,6 +40,12 @@ export function GamePage() {
     return () => clearInterval(id);
   }, [store, room?.code]);
 
+  useEffect(() => {
+    if (room?.status === "lobby") {
+      navigate("/lobby", { replace: true });
+    }
+  }, [navigate, room?.status]);
+
   if (!room || !participantId) {
     return null;
   }
@@ -47,6 +53,17 @@ export function GamePage() {
   // Game-over overlay — render before canvas/guess layout
   if (room.status === "game-over") {
     const sorted = [...room.participants].sort((a, b) => b.score - a.score);
+    const isHost = room.participants.find((p) => p.id === participantId)?.isHost ?? false;
+
+    async function handleRestart() {
+      if (!room || !participantId) return;
+      try {
+        const response = await api.restartGame(room.code, participantId);
+        store.setRoomSnapshot(response.room);
+      } catch {
+        // ignore; polling will reflect state
+      }
+    }
 
     return (
       <section className="panel game-page">
@@ -58,22 +75,35 @@ export function GamePage() {
           <RoomCodeBadge code={room.code} />
         </div>
 
-        <div style={{ maxWidth: "480px", margin: "2rem auto" }}>
-          <Card title="Results">
+        <div style={{ maxWidth: "560px", margin: "2rem auto", display: "flex", flexDirection: "column", gap: "1rem" }}>
+          {room.currentWord && (
+            <Card title="Word Reveal">
+              <p style={{ fontSize: "1.25rem", fontWeight: 600, textAlign: "center" }}>
+                The word was: <strong>{room.currentWord}</strong>
+              </p>
+            </Card>
+          )}
+
+          <Card title="Final Scores">
             <ul className="player-list">
               {sorted.map((p, i) => (
                 <li key={p.id} className="player-list__item">
-                  <span className="player-list__name">
-                    {i + 1}. {p.name}
-                  </span>
+                  <span className="player-list__name">{i + 1}. {p.name}</span>
                   <strong>{p.score} pts</strong>
                 </li>
               ))}
             </ul>
           </Card>
+
+          <ResultPanel guesses={room.guesses ?? []} />
         </div>
 
         <div className="button-row">
+          {isHost && (
+            <button className="button button--primary" onClick={handleRestart}>
+              Play Again
+            </button>
+          )}
           <button className="button button--secondary" onClick={() => navigate("/lobby")}>
             Back to Lobby
           </button>

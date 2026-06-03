@@ -5,6 +5,7 @@ import {
   guessSchema,
   HttpError,
   joinRoomSchema,
+  restartGameSchema,
   roomCodeParamsSchema,
   roomViewerQuerySchema,
   startGameSchema,
@@ -13,6 +14,7 @@ import {
 import {
   addStroke,
   clearStrokes,
+  restartGame,
   createRoom,
   getRoom,
   joinRoom,
@@ -125,6 +127,20 @@ export function createRoomsRouter() {
 
       response.json({
         room: toRoomSnapshot(room, participantId)
+      });
+    } catch (error) {
+      next(error);
+    }
+  });
+
+  router.post("/:code/restart", (request, response, next) => {
+    try {
+      const { code } = roomCodeParamsSchema.parse(request.params);
+      const { participantId } = restartGameSchema.parse(request.body);
+      const room = restartGame(code.toUpperCase(), participantId);
+
+      response.json({
+        room: toRoomSnapshot(room)
       });
     } catch (error) {
       next(error);
