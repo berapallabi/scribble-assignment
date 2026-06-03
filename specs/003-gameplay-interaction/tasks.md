@@ -18,7 +18,7 @@
 
 **Purpose**: Confirm baseline stubs exist before implementation begins
 
-- [ ] T001 Verify GuessForm.tsx, Scoreboard.tsx, and ResultPanel.tsx exist as stubs in frontend/src/components/ (read-only check; no change expected)
+- [x] T001 Verify GuessForm.tsx, Scoreboard.tsx, and ResultPanel.tsx exist as stubs in frontend/src/components/ (read-only check; no change expected)
 
 ---
 
@@ -28,10 +28,10 @@
 
 **⚠️ CRITICAL**: No user story work can begin until this phase is complete
 
-- [ ] T002 [P] Add `Point`, `Stroke`, `Guess` interfaces; add `score: number` to `Participant`; add `strokes: Stroke[]` and `guesses: Guess[]` to `Room` and `RoomSnapshot` in backend/src/models/game.ts
-- [ ] T003 [P] Add `Point`, `Stroke`, `Guess` interfaces; add `score: number` to `Participant`; add `strokes: Stroke[]` and `guesses: Guess[]` to `RoomSnapshot` in frontend/src/services/api.ts
-- [ ] T004 Update `startGame()` in backend/src/services/roomStore.ts to initialise `participant.score = 0` for every participant, `room.strokes = []`, and `room.guesses = []` before setting `room.status = "in-game"` (after T002)
-- [ ] T005 Update `toRoomSnapshot()` in backend/src/services/roomStore.ts to include `strokes: room.strokes.map(s => ({ ...s, points: [...s.points] }))` and `guesses: [...room.guesses]` in the returned snapshot (no viewer-filtering; both drawer and guessers receive the full arrays) (after T004)
+- [x] T002 [P] Add `Point`, `Stroke`, `Guess` interfaces; add `score: number` to `Participant`; add `strokes: Stroke[]` and `guesses: Guess[]` to `Room` and `RoomSnapshot` in backend/src/models/game.ts
+- [x] T003 [P] Add `Point`, `Stroke`, `Guess` interfaces; add `score: number` to `Participant`; add `strokes: Stroke[]` and `guesses: Guess[]` to `RoomSnapshot` in frontend/src/services/api.ts
+- [x] T004 Update `startGame()` in backend/src/services/roomStore.ts to initialise `participant.score = 0` for every participant, `room.strokes = []`, and `room.guesses = []` before setting `room.status = "in-game"` (after T002)
+- [x] T005 Update `toRoomSnapshot()` in backend/src/services/roomStore.ts to include `strokes: room.strokes.map(s => ({ ...s, points: [...s.points] }))` and `guesses: [...room.guesses]` in the returned snapshot (no viewer-filtering; both drawer and guessers receive the full arrays) (after T004)
 
 **Checkpoint**: Types updated, game-start initialises clean state, snapshot carries strokes and guesses — user story implementation can now begin
 
@@ -45,12 +45,12 @@
 
 ### Implementation for User Story 1
 
-- [ ] T006 [US1] Add `addStroke(code, participantId, points)` and `clearStrokes(code, participantId)` functions to backend/src/services/roomStore.ts: guard room exists (404), in-game (409), caller is drawer (403 if not), points ≥ 2 (422); clamp coordinates to [0,1]; append stroke with `randomUUID()` id; clear sets `room.strokes = []`
-- [ ] T007 [P] [US1] Add `strokeSchema` (`{ participantId: string.min(1), points: array(point).min(2) }`) and `clearStrokesSchema` (`{ participantId: string.min(1) }`) to backend/src/api/schemas.ts (parallel with T006, different file)
-- [ ] T008 [US1] Add `POST /rooms/:code/strokes` and `DELETE /rooms/:code/strokes` routes to backend/src/api/rooms.ts: parse schemas, call `addStroke`/`clearStrokes`, return `{ room: toRoomSnapshot(room, participantId) }` (after T006 + T007)
-- [ ] T009 [P] [US1] Add `addStroke(code, participantId, points)` and `clearStrokes(code, participantId)` methods to the `api` object in frontend/src/services/api.ts (parallel with T006–T008, different repo layer; depends on T003 for types)
-- [ ] T010 [P] [US1] Create frontend/src/components/DrawingCanvas.tsx: props `strokes: Stroke[]`, `onStroke?: (points: Point[]) => void`, `onClear?: () => void`; use `useRef<HTMLCanvasElement>` and `useEffect([strokes])` to clear and re-draw all strokes on each change; in drawer mode (onStroke provided) wire `mousedown`/`mousemove`/`mouseup` to accumulate points and call `onStroke(points)` on mouseup; scale normalised coordinates by `canvas.width`/`canvas.height`; show "Clear Canvas" button only when `onClear` is provided (parallel with T006–T008; depends on T003 for types)
-- [ ] T011 [US1] Update frontend/src/pages/GamePage.tsx: import DrawingCanvas; replace canvas-placeholder div with `<DrawingCanvas strokes={room.strokes ?? []} onStroke={isDrawer ? handleStroke : undefined} onClear={isDrawer ? handleClear : undefined} />`; add `handleStroke(points)` that calls `api.addStroke` and updates snapshot via `roomStore.setRoomSnapshot`; add `handleClear()` that calls `api.clearStrokes` and updates snapshot (after T009 + T010)
+- [x] T006 [US1] Add `addStroke(code, participantId, points)` and `clearStrokes(code, participantId)` functions to backend/src/services/roomStore.ts: guard room exists (404), in-game (409), caller is drawer (403 if not), points ≥ 2 (422); clamp coordinates to [0,1]; append stroke with `randomUUID()` id; clear sets `room.strokes = []`
+- [x] T007 [P] [US1] Add `strokeSchema` (`{ participantId: string.min(1), points: array(point).min(2) }`) and `clearStrokesSchema` (`{ participantId: string.min(1) }`) to backend/src/api/schemas.ts (parallel with T006, different file)
+- [x] T008 [US1] Add `POST /rooms/:code/strokes` and `DELETE /rooms/:code/strokes` routes to backend/src/api/rooms.ts: parse schemas, call `addStroke`/`clearStrokes`, return `{ room: toRoomSnapshot(room, participantId) }` (after T006 + T007)
+- [x] T009 [P] [US1] Add `addStroke(code, participantId, points)` and `clearStrokes(code, participantId)` methods to the `api` object in frontend/src/services/api.ts (parallel with T006–T008, different repo layer; depends on T003 for types)
+- [x] T010 [P] [US1] Create frontend/src/components/DrawingCanvas.tsx: props `strokes: Stroke[]`, `onStroke?: (points: Point[]) => void`, `onClear?: () => void`; use `useRef<HTMLCanvasElement>` and `useEffect([strokes])` to clear and re-draw all strokes on each change; in drawer mode (onStroke provided) wire `mousedown`/`mousemove`/`mouseup` to accumulate points and call `onStroke(points)` on mouseup; scale normalised coordinates by `canvas.width`/`canvas.height`; show "Clear Canvas" button only when `onClear` is provided (parallel with T006–T008; depends on T003 for types)
+- [x] T011 [US1] Update frontend/src/pages/GamePage.tsx: import DrawingCanvas; replace canvas-placeholder div with `<DrawingCanvas strokes={room.strokes ?? []} onStroke={isDrawer ? handleStroke : undefined} onClear={isDrawer ? handleClear : undefined} />`; add `handleStroke(points)` that calls `api.addStroke` and updates snapshot via `roomStore.setRoomSnapshot`; add `handleClear()` that calls `api.clearStrokes` and updates snapshot (after T009 + T010)
 
 **Checkpoint**: Drawer draws → strokes visible locally and on guesser canvases after next poll. Clear works on all screens. (Navigation from lobby to `/game` is handled by existing `LobbyPage.tsx` polling logic — no change needed.)
 
@@ -64,12 +64,12 @@
 
 ### Implementation for User Story 2
 
-- [ ] T012 [US2] Add `submitGuess(code, participantId, rawText)` to backend/src/services/roomStore.ts: guard room exists (404), in-game (409), participant exists (404), caller is not drawer (403); trim text, reject empty (422 "Guess cannot be empty"); compare `text.toLowerCase() === currentWord?.toLowerCase()`; if correct add 100 to participant.score; append `{ participantId, participantName, text, isCorrect, submittedAt }` to `room.guesses`; return `cloneRoom(room)` (after T004)
-- [ ] T013 [P] [US2] Add `guessSchema` (`{ participantId: string.min(1), text: string() }`) to backend/src/api/schemas.ts (parallel with T012, different file)
-- [ ] T014 [US2] Add `POST /rooms/:code/guesses` route to backend/src/api/rooms.ts: parse `guessSchema`, call `submitGuess(code, participantId, text)`, return `{ room: toRoomSnapshot(room, participantId) }` (after T012 + T013)
-- [ ] T015 [P] [US2] Add `submitGuess(code, participantId, text)` method to the `api` object in frontend/src/services/api.ts: `POST /rooms/:code/guesses` returning `{ room: RoomSnapshot }` (parallel with T012–T014; depends on T003)
-- [ ] T016 [P] [US2] Implement GuessForm.tsx in frontend/src/components/GuessForm.tsx: keep existing `disabled?: boolean` prop; add `onSubmit: (text: string) => void` and `error?: string | null`; controlled input with local state; call `onSubmit(value)` and clear input on form submit; show `error` below input when present; disable input and button when `disabled` is true (parallel with T012–T014)
-- [ ] T017 [US2] Update frontend/src/pages/GamePage.tsx: add local state `guessError: string | null` and `isSubmitting: boolean`; add `handleGuess(text)` that sets `isSubmitting=true`, calls `api.submitGuess`, calls `roomStore.setRoomSnapshot(response.room)`, clears `guessError`, sets `guessError` on API error, finally sets `isSubmitting=false`; render `<GuessForm onSubmit={handleGuess} error={guessError} disabled={isSubmitting} />` in right sidebar only when `!isDrawer` (after T015 + T016)
+- [x] T012 [US2] Add `submitGuess(code, participantId, rawText)` to backend/src/services/roomStore.ts: guard room exists (404), in-game (409), participant exists (404), caller is not drawer (403); trim text, reject empty (422 "Guess cannot be empty"); compare `text.toLowerCase() === currentWord?.toLowerCase()`; if correct add 100 to participant.score; append `{ participantId, participantName, text, isCorrect, submittedAt }` to `room.guesses`; return `cloneRoom(room)` (after T004)
+- [x] T013 [P] [US2] Add `guessSchema` (`{ participantId: string.min(1), text: string() }`) to backend/src/api/schemas.ts (parallel with T012, different file)
+- [x] T014 [US2] Add `POST /rooms/:code/guesses` route to backend/src/api/rooms.ts: parse `guessSchema`, call `submitGuess(code, participantId, text)`, return `{ room: toRoomSnapshot(room, participantId) }` (after T012 + T013)
+- [x] T015 [P] [US2] Add `submitGuess(code, participantId, text)` method to the `api` object in frontend/src/services/api.ts: `POST /rooms/:code/guesses` returning `{ room: RoomSnapshot }` (parallel with T012–T014; depends on T003)
+- [x] T016 [P] [US2] Implement GuessForm.tsx in frontend/src/components/GuessForm.tsx: keep existing `disabled?: boolean` prop; add `onSubmit: (text: string) => void` and `error?: string | null`; controlled input with local state; call `onSubmit(value)` and clear input on form submit; show `error` below input when present; disable input and button when `disabled` is true (parallel with T012–T014)
+- [x] T017 [US2] Update frontend/src/pages/GamePage.tsx: add local state `guessError: string | null` and `isSubmitting: boolean`; add `handleGuess(text)` that sets `isSubmitting=true`, calls `api.submitGuess`, calls `roomStore.setRoomSnapshot(response.room)`, clears `guessError`, sets `guessError` on API error, finally sets `isSubmitting=false`; render `<GuessForm onSubmit={handleGuess} error={guessError} disabled={isSubmitting} />` in right sidebar only when `!isDrawer` (after T015 + T016)
 
 **Checkpoint**: Guesser submits correct word → score increases by 100 on next render. Wrong word → score unchanged. Empty/whitespace → inline error. Drawer has no guess form visible.
 
@@ -83,9 +83,9 @@
 
 ### Implementation for User Story 3
 
-- [ ] T018 [P] [US3] Implement Scoreboard.tsx in frontend/src/components/Scoreboard.tsx: accept `participants: Participant[]` prop; render a list sorted descending by `score` showing each participant's name and score
-- [ ] T019 [P] [US3] Implement ResultPanel.tsx in frontend/src/components/ResultPanel.tsx: accept `guesses: Guess[]` prop; render ordered list of guesses showing submitter name, trimmed text, and a ✓ or ✗ indicator based on `isCorrect`
-- [ ] T020 [US3] Update frontend/src/pages/GamePage.tsx: import Scoreboard and ResultPanel; add `<Scoreboard participants={room.participants} />` and `<ResultPanel guesses={room.guesses ?? []} />` to the left sidebar (after T018 + T019)
+- [x] T018 [P] [US3] Implement Scoreboard.tsx in frontend/src/components/Scoreboard.tsx: accept `participants: Participant[]` prop; render a list sorted descending by `score` showing each participant's name and score
+- [x] T019 [P] [US3] Implement ResultPanel.tsx in frontend/src/components/ResultPanel.tsx: accept `guesses: Guess[]` prop; render ordered list of guesses showing submitter name, trimmed text, and a ✓ or ✗ indicator based on `isCorrect`
+- [x] T020 [US3] Update frontend/src/pages/GamePage.tsx: import Scoreboard and ResultPanel; add `<Scoreboard participants={room.participants} />` and `<ResultPanel guesses={room.guesses ?? []} />` to the left sidebar (after T018 + T019)
 
 **Checkpoint**: All participants see guess history in submission order and live scores. After a correct guess, updated score appears within the next poll cycle on all screens.
 
@@ -95,8 +95,8 @@
 
 **Purpose**: Build verification before PR
 
-- [ ] T021 [P] Verify TypeScript build passes for backend with `npm run build` in backend/
-- [ ] T022 [P] Verify TypeScript build passes for frontend with `npm run build` in frontend/
+- [x] T021 [P] Verify TypeScript build passes for backend with `npm run build` in backend/
+- [x] T022 [P] Verify TypeScript build passes for frontend with `npm run build` in frontend/
 
 ---
 

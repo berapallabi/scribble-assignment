@@ -6,6 +6,26 @@ export interface Participant {
   name: string;
   isHost: boolean;
   joinedAt: string;
+  score: number;
+}
+
+export interface Point {
+  x: number;
+  y: number;
+}
+
+export interface Stroke {
+  id: string;
+  points: Point[];
+  createdAt: string;
+}
+
+export interface Guess {
+  participantId: string;
+  participantName: string;
+  text: string;
+  isCorrect: boolean;
+  submittedAt: string;
 }
 
 export interface Room {
@@ -16,6 +36,8 @@ export interface Room {
   updatedAt: string;
   drawerId?: string;
   currentWord?: string;
+  strokes: Stroke[];
+  guesses: Guess[];
 }
 
 export interface RoomSnapshot {
@@ -27,6 +49,8 @@ export interface RoomSnapshot {
   drawerId?: string;
   currentWord?: string;
   wordLength?: number;
+  strokes: Stroke[];
+  guesses: Guess[];
 }
 
 export interface RoomSessionResponse {
