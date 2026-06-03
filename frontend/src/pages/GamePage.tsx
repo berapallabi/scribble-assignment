@@ -1,10 +1,7 @@
 import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Card } from "../components/Card";
-import { GuessForm } from "../components/GuessForm";
-import { ResultPanel } from "../components/ResultPanel";
 import { RoomCodeBadge } from "../components/RoomCodeBadge";
-import { Scoreboard } from "../components/Scoreboard";
 import { useRoomState } from "../state/roomStore";
 
 export function GamePage() {
@@ -21,7 +18,13 @@ export function GamePage() {
     return null;
   }
 
-  const viewer = room.participants.find((participant) => participant.id === participantId) ?? null;
+  const isDrawer = room.drawerId === participantId;
+  const drawerName = room.participants.find((p) => p.id === room.drawerId)?.name;
+  const wordDisplay = isDrawer
+    ? room.currentWord
+    : room.wordLength
+      ? Array.from({ length: room.wordLength }, () => "_").join(" ")
+      : null;
 
   return (
     <section className="panel game-page">
@@ -35,36 +38,38 @@ export function GamePage() {
 
       <div className="game-page__layout">
         <aside className="game-page__sidebar game-page__sidebar--left">
-          <Scoreboard />
-          <ResultPanel />
+          <Card title="Current Drawer">
+            <p className="game-page__drawer-name">{drawerName ?? "Unknown"}</p>
+          </Card>
+
+          <Card title="Word">
+            <p className="game-page__word">{wordDisplay ?? "—"}</p>
+          </Card>
+
+          <Card title="Players">
+            <ul className="player-list">
+              {room.participants.map((p) => (
+                <li key={p.id} className="player-list__item">
+                  <span className="player-list__name">{p.name}</span>
+                  <span className="player-list__role">
+                    {p.id === room.drawerId ? "Drawer" : "Guesser"}
+                  </span>
+                </li>
+              ))}
+            </ul>
+          </Card>
         </aside>
 
         <div className="game-page__main">
           <Card title="Canvas">
-            <div className="canvas-placeholder" style={{ minHeight: '500px', backgroundColor: '#ffffff', border: '1px solid #e5e7eb' }}>
-              Waiting for drawer...
+            <div
+              className="canvas-placeholder"
+              style={{ minHeight: "500px", backgroundColor: "#ffffff", border: "1px solid #e5e7eb" }}
+            >
+              {isDrawer ? "You are drawing!" : `Waiting for ${drawerName ?? "the drawer"} to draw...`}
             </div>
           </Card>
         </div>
-
-        <aside className="game-page__sidebar game-page__sidebar--right">
-          <Card title="Player Info">
-            <dl className="detail-list">
-              <div>
-                <dt>Name</dt>
-                <dd>{viewer?.name ?? "Unknown player"}</dd>
-              </div>
-              <div>
-                <dt>Status</dt>
-                <dd>Playing</dd>
-              </div>
-            </dl>
-          </Card>
-
-          <Card title="Your Guess">
-            <GuessForm />
-          </Card>
-        </aside>
       </div>
 
       <div className="button-row">

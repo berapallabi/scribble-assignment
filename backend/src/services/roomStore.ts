@@ -120,6 +120,14 @@ export function startGame(code: string, participantId: string) {
     throw httpError(409, "The game has already started");
   }
 
+  const firstWord: string | undefined = STARTER_WORDS[0];
+
+  if (!firstWord) {
+    throw httpError(500, "No words available to start the game");
+  }
+
+  room.drawerId = caller.id;
+  room.currentWord = firstWord;
   room.status = "in-game";
   room.updatedAt = now();
   rooms.set(room.code, room);
@@ -128,13 +136,22 @@ export function startGame(code: string, participantId: string) {
 }
 
 export function toRoomSnapshot(room: Room, viewerParticipantId?: string): RoomSnapshot {
-  void viewerParticipantId;
-
-  return {
+  const snapshot: RoomSnapshot = {
     code: room.code,
     status: room.status,
     participants: room.participants.map((participant) => ({ ...participant })),
     availableWords: listWords(),
-    roles: [...STARTER_ROLES]
+    roles: [...STARTER_ROLES],
+    ...(room.status === "in-game" && { drawerId: room.drawerId })
   };
+
+  if (room.status === "in-game" && room.currentWord) {
+    if (viewerParticipantId === room.drawerId) {
+      snapshot.currentWord = room.currentWord;
+    } else {
+      snapshot.wordLength = room.currentWord.length;
+    }
+  }
+
+  return snapshot;
 }

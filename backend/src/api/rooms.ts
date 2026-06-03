@@ -70,7 +70,7 @@ export function createRoomsRouter() {
       const room = startGame(code.toUpperCase(), participantId);
 
       response.json({
-        room: toRoomSnapshot(room)
+        room: toRoomSnapshot(room, participantId)
       });
     } catch (error) {
       next(error);

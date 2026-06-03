@@ -18,7 +18,7 @@
 
 **Purpose**: Confirm baseline is ready before making changes
 
-- [ ] T001 Verify STARTER_WORDS array in backend/src/seed/starterData.ts contains ["rocket","pizza","castle","guitar","sunflower"] (read-only check; no change expected)
+- [x] T001 Verify STARTER_WORDS array in backend/src/seed/starterData.ts contains ["rocket","pizza","castle","guitar","sunflower"] (read-only check; no change expected)
 
 ---
 
@@ -28,8 +28,8 @@
 
 **⚠️ CRITICAL**: No user story work can begin until this phase is complete
 
-- [ ] T002 [P] Add `drawerId?: string` and `currentWord?: string` to `Room` interface; add `drawerId?: string`, `currentWord?: string`, `wordLength?: number` to `RoomSnapshot` interface in backend/src/models/game.ts
-- [ ] T003 [P] Add `drawerId?: string`, `currentWord?: string`, `wordLength?: number` to `RoomSnapshot` interface in frontend/src/services/api.ts
+- [x] T002 [P] Add `drawerId?: string` and `currentWord?: string` to `Room` interface; add `drawerId?: string`, `currentWord?: string`, `wordLength?: number` to `RoomSnapshot` interface in backend/src/models/game.ts
+- [x] T003 [P] Add `drawerId?: string`, `currentWord?: string`, `wordLength?: number` to `RoomSnapshot` interface in frontend/src/services/api.ts
 
 **Checkpoint**: Type definitions updated — backend and frontend can now reference new fields safely
 
@@ -43,10 +43,10 @@
 
 ### Implementation for User Story 1
 
-- [ ] T004 [US1] Update `startGame()` in backend/src/services/roomStore.ts: guard against empty `STARTER_WORDS` (throw 500 `"No words available to start the game"`), then set `room.drawerId = host.id` and `room.currentWord = STARTER_WORDS[0]` before setting `room.status = "in-game"`
-- [ ] T005 [US1] Update `toRoomSnapshot()` in backend/src/services/roomStore.ts to always include `drawerId: room.drawerId` in the returned snapshot (applies to all viewers when status is `"in-game"`)
-- [ ] T006 [US1] Update `POST /rooms/:code/start` handler in backend/src/api/rooms.ts to pass `participantId` to `toRoomSnapshot(room, participantId)` so the host (drawer) receives the correct snapshot immediately in the start response
-- [ ] T007 [US1] Replace the GamePage placeholder with an in-game layout in frontend/src/pages/GamePage.tsx: obtain `isDrawer = room.drawerId === participantId` and `participantId` from `useRoomState()`; render a participant list showing each player's name with a "Drawer" or "Guesser" role label based on `room.drawerId`; remove `<GuessForm>`, `<Scoreboard>`, and `<ResultPanel>` (out of scope for this feature); retain the canvas-placeholder div and the Exit Game button
+- [x] T004 [US1] Update `startGame()` in backend/src/services/roomStore.ts: guard against empty `STARTER_WORDS` (throw 500 `"No words available to start the game"`), then set `room.drawerId = host.id` and `room.currentWord = STARTER_WORDS[0]` before setting `room.status = "in-game"`
+- [x] T005 [US1] Update `toRoomSnapshot()` in backend/src/services/roomStore.ts to always include `drawerId: room.drawerId` in the returned snapshot (applies to all viewers when status is `"in-game"`)
+- [x] T006 [US1] Update `POST /rooms/:code/start` handler in backend/src/api/rooms.ts to pass `participantId` to `toRoomSnapshot(room, participantId)` so the host (drawer) receives the correct snapshot immediately in the start response
+- [x] T007 [US1] Replace the GamePage placeholder with an in-game layout in frontend/src/pages/GamePage.tsx: obtain `isDrawer = room.drawerId === participantId` and `participantId` from `useRoomState()`; render a participant list showing each player's name with a "Drawer" or "Guesser" role label based on `room.drawerId`; remove `<GuessForm>`, `<Scoreboard>`, and `<ResultPanel>` (out of scope for this feature); retain the canvas-placeholder div and the Exit Game button
 
 **Checkpoint**: User Story 1 fully functional — two browser tabs can start a game and navigate to the game screen with drawer/guesser names visible. (Navigation from lobby → `/game` is handled by the existing `LobbyPage.tsx` polling logic from Scenario 1; no change to the navigation trigger is needed.)
 
@@ -60,7 +60,7 @@
 
 ### Implementation for User Story 2
 
-- [ ] T008 [US2] Add a dedicated "Current Drawer" section to GamePage.tsx in frontend/src/pages/GamePage.tsx: derive `drawerName = room.participants.find(p => p.id === room.drawerId)?.name` and render it prominently (e.g., `"Drawing: [drawerName]"`) above the participant list
+- [x] T008 [US2] Add a dedicated "Current Drawer" section to GamePage.tsx in frontend/src/pages/GamePage.tsx: derive `drawerName = room.participants.find(p => p.id === room.drawerId)?.name` and render it prominently (e.g., `"Drawing: [drawerName]"`) above the participant list
 
 **Checkpoint**: User Story 2 fully functional — all screens show a clear, prominent drawer indicator with the host's name; the guesser list is distinct
 
@@ -74,8 +74,8 @@
 
 ### Implementation for User Story 3
 
-- [ ] T009 [US3] Extend the `toRoomSnapshot()` function in backend/src/services/roomStore.ts — preserving the `drawerId` field added in T005 — to add viewer-aware word filtering: when `room.status === "in-game"` and `viewerParticipantId === room.drawerId`, also include `currentWord: room.currentWord`; otherwise include `wordLength: room.currentWord?.length`; omit both fields while `status === "lobby"`
-- [ ] T010 [US3] Add secret word display to GamePage.tsx in frontend/src/pages/GamePage.tsx: if `isDrawer` render `room.currentWord` prominently; otherwise render underscore placeholders — one `"_"` per letter space-separated using `room.wordLength` (e.g., `Array.from({length: room.wordLength}, () => "_").join(" ")`)
+- [x] T009 [US3] Extend the `toRoomSnapshot()` function in backend/src/services/roomStore.ts — preserving the `drawerId` field added in T005 — to add viewer-aware word filtering: when `room.status === "in-game"` and `viewerParticipantId === room.drawerId`, also include `currentWord: room.currentWord`; otherwise include `wordLength: room.currentWord?.length`; omit both fields while `status === "lobby"`
+- [x] T010 [US3] Add secret word display to GamePage.tsx in frontend/src/pages/GamePage.tsx: if `isDrawer` render `room.currentWord` prominently; otherwise render underscore placeholders — one `"_"` per letter space-separated using `room.wordLength` (e.g., `Array.from({length: room.wordLength}, () => "_").join(" ")`)
 
 **Checkpoint**: User Story 3 fully functional — drawer sees the word, guessers see only underscores, `currentWord` never appears in guesser network responses. Also verify the late-joiner edge case: a participant who navigates to the game screen after `status = "in-game"` receives a guesser snapshot with `wordLength` (not `currentWord`).
 
@@ -85,8 +85,8 @@
 
 **Purpose**: Build verification and final validation
 
-- [ ] T011 [P] Verify TypeScript build passes for backend with `npm run build` in backend/
-- [ ] T012 [P] Verify TypeScript build passes for frontend with `npm run build` in frontend/
+- [x] T011 [P] Verify TypeScript build passes for backend with `npm run build` in backend/
+- [x] T012 [P] Verify TypeScript build passes for frontend with `npm run build` in frontend/
 
 ---
 
